@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MockServerTestService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">insuranceQuote</a> &gt; <a href="index.source.html" class="el_package">com.insurance.insuranceQuote.service</a> &gt; <span class="el_source">MockServerTestService.java</span></div><h1>MockServerTestService.java</h1><pre class="source lang-java linenums">package com.insurance.insuranceQuote.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.aspectj.lang.annotation.After;
+import org.mockserver.integration.ClientAndServer;
+import org.mockserver.matchers.TimeToLive;
+import org.mockserver.model.Header;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static org.mockserver.integration.ClientAndServer.startClientAndServer;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
+
+/**
+ * Mock de um serviço rest para simular o serviço de catalogo
+ */
+@Service
+public class MockServerTestService {
+
+    private ClientAndServer mockServer;
+
+    @Value(&quot;${catalog.base.url}&quot;)
+    private String baseUrl;
+
+<span class="fc" id="L32">    public MockServerTestService(){</span>
+<span class="fc" id="L33">        mockServer = startClientAndServer(1080);</span>
+
+<span class="fc" id="L35">        createValidResponseProduct();</span>
+<span class="fc" id="L36">        createValidResponseOffer();</span>
+<span class="fc" id="L37">    }</span>
+
+
+
+    @After(&quot;execution(* com.insurance.insuranceQuote.service.*.*(..))&quot;)
+    public void stopMockServer(){
+<span class="nc bnc" id="L43" title="All 2 branches missed.">        if(mockServer != null){</span>
+<span class="nc" id="L44">            mockServer.stop();</span>
+        }
+<span class="nc" id="L46">    }</span>
+
+    @Bean
+    private void createValidResponseOffer(){
+<span class="fc" id="L50">        Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L51">        params.put(&quot;offer_id&quot;, &quot;adc56d77-348c-4bf0-908f-22d402ee715c&quot;);</span>
+        try{
+<span class="fc" id="L53">            mockServer</span>
+<span class="fc" id="L54">                    .when(</span>
+<span class="fc" id="L55">                            request()</span>
+<span class="fc" id="L56">                                    .withMethod(&quot;POST&quot;)</span>
+<span class="fc" id="L57">                                    .withPath(&quot;/insurance/offer&quot;)</span>
+<span class="fc" id="L58">                                    .withHeader(&quot;Content-Type&quot;, &quot;application/json&quot;)</span>
+<span class="fc" id="L59">                                    .withBody(new ObjectMapper().writeValueAsString(params))</span>
+<span class="fc" id="L60">                    ).respond(</span>
+<span class="fc" id="L61">                        response()</span>
+<span class="fc" id="L62">                                .withStatusCode(200)</span>
+<span class="fc" id="L63">                                .withHeader(&quot;Content-Type&quot;, &quot;application/json&quot;)</span>
+<span class="fc" id="L64">                                .withBody(&quot;{ &quot;+</span>
+                                        &quot;    \&quot;id\&quot;: \&quot;adc56d77-348c-4bf0-908f-22d402ee715c\&quot;,&quot; +
+                                        &quot;    \&quot;product_id\&quot;: \&quot;1b2da7cc-b367-4196-8a78-9cfeec21f587\&quot;,&quot; +
+                                        &quot;    \&quot;name\&quot;: \&quot;Seguro de Vida Familiar\&quot;,&quot; +
+                                        &quot;    \&quot;created_at\&quot;: \&quot;2021-07-01T00:00:00Z\&quot;,&quot; +
+                                        &quot;    \&quot;active\&quot;: true,&quot; +
+                                        &quot;    \&quot;coverages\&quot;: { &quot;+
+                                        &quot;        \&quot;Incêndio\&quot;: 500000.00,&quot; +
+                                        &quot;        \&quot;Desastres naturais\&quot;: 600000.00,&quot; +
+                                        &quot;        \&quot;Responsabiliadade civil\&quot;: 80000.00,&quot; +
+                                        &quot;        \&quot;Roubo\&quot;: 100000.00 &quot;+
+                                        &quot;    },&quot; +
+                                        &quot;    \&quot;assistances\&quot;: [&quot; +
+                                        &quot;        \&quot;Encanador\&quot;,&quot; +
+                                        &quot;        \&quot;Eletricista\&quot;,&quot; +
+                                        &quot;        \&quot;Chaveiro 24h\&quot;,&quot; +
+                                        &quot;        \&quot;Assistência Funerária\&quot;&quot; +
+                                        &quot;    ],&quot; +
+                                        &quot;    \&quot;monthly_premium_amount\&quot;: { &quot;+
+                                        &quot;        \&quot;max_amount\&quot;: 100.74,&quot; +
+                                        &quot;        \&quot;min_amount\&quot;: 50.00,&quot; +
+                                        &quot;        \&quot;suggested_amount\&quot;: 60.25 &quot;+
+                                        &quot;    }&quot; +
+                                        &quot;}&quot;)
+<span class="fc" id="L88">                                .withDelay(TimeUnit.SECONDS,1)</span>
+                    );
+
+<span class="nc" id="L91">        }catch (JsonProcessingException e){</span>
+<span class="nc" id="L92">            throw new RuntimeException(e);</span>
+<span class="fc" id="L93">        }</span>
+<span class="fc" id="L94">    }</span>
+
+    private void createValidResponseProduct() {
+<span class="fc" id="L97">        Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L98">        params.put(&quot;product_id&quot;, &quot;1b2da7cc-b367-4196-8a78-9cfeec21f587&quot;);</span>
+        try{
+<span class="fc" id="L100">            mockServer</span>
+<span class="fc" id="L101">                    .when(</span>
+<span class="fc" id="L102">                            request()</span>
+<span class="fc" id="L103">                                    .withMethod(&quot;POST&quot;)</span>
+<span class="fc" id="L104">                                    .withPath(&quot;/insurance/product&quot;)</span>
+<span class="fc" id="L105">                                    .withHeader(&quot;Content-Type&quot;, &quot;application/json&quot;)</span>
+<span class="fc" id="L106">                                    .withBody(new ObjectMapper().writeValueAsString(params))</span>
+                                     )
+<span class="fc" id="L108">                    .respond(</span>
+<span class="fc" id="L109">                            response()</span>
+<span class="fc" id="L110">                                    .withStatusCode(200)</span>
+<span class="fc" id="L111">                                    .withHeader(</span>
+                                            new Header(&quot;Content-type&quot;, &quot;application/json&quot;)
+                                    )
+<span class="fc" id="L114">                                    .withBody(&quot;{&quot; +</span>
+                                            &quot;    \&quot;id\&quot;: \&quot;1b2da7cc-b367-4196-8a78-9cfeec21f587\&quot;,&quot; +
+                                            &quot;    \&quot;name\&quot;: \&quot;Seguro de Vida\&quot;,&quot; +
+                                            &quot;    \&quot;created_at\&quot;: \&quot;2021-07-01T00:00:00Z\&quot;,&quot; +
+                                            &quot;    \&quot;active\&quot;: true,&quot; +
+                                            &quot;    \&quot;offers\&quot;: [&quot; +
+                                            &quot;        \&quot;adc56d77-348c-4bf0-908f-22d402ee715c\&quot;,&quot; +
+                                            &quot;        \&quot;bdc56d77-348c-4bf0-908f-22d402ee715c\&quot;,&quot; +
+                                            &quot;        \&quot;cdc56d77-348c-4bf0-908f-22d402ee715c\&quot;&quot; +
+                                            &quot;    ]&quot; +
+                                            &quot;}&quot;)
+<span class="fc" id="L125">                                    .withDelay(TimeUnit.SECONDS,1)</span>
+                    );
+
+<span class="nc" id="L128">        }catch (JsonProcessingException e){</span>
+<span class="nc" id="L129">            throw new RuntimeException(e);</span>
+<span class="fc" id="L130">        }</span>
+
+<span class="fc" id="L132">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

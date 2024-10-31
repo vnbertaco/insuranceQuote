@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InsuranceMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">insuranceQuote</a> &gt; <a href="index.source.html" class="el_package">com.insurance.insuranceQuote.util</a> &gt; <span class="el_source">InsuranceMapper.java</span></div><h1>InsuranceMapper.java</h1><pre class="source lang-java linenums">package com.insurance.insuranceQuote.util;
+
+import com.insurance.insuranceQuote.exception.CatalogServiceRequestException;
+import com.insurance.insuranceQuote.model.dto.QuoteRequisition;
+import com.insurance.insuranceQuote.model.entity.QuotedInsurance;
+
+import java.time.LocalDateTime;
+
+/**
+ * Cria um objeto de cotação a partir da requisicao validada
+ */
+public class InsuranceMapper {
+
+    private InsuranceMapper(){}
+
+    public static QuotedInsurance insuranceRequisitionToQuoted(QuoteRequisition quoteRequisition) throws CatalogServiceRequestException {
+        try {
+<span class="fc" id="L18">            return QuotedInsurance.builder()</span>
+<span class="fc" id="L19">                    .category(quoteRequisition.getCategory())</span>
+<span class="fc" id="L20">                    .assistances(quoteRequisition.getAssistances())</span>
+<span class="fc" id="L21">                    .customer(quoteRequisition.getCustomerData())</span>
+<span class="fc" id="L22">                    .coverages(quoteRequisition.getCoverageAmounts())</span>
+<span class="fc" id="L23">                    .totalMonthlyPremiumAmount(quoteRequisition.getTotalMonthlyPremiumAmount())</span>
+<span class="fc" id="L24">                    .offerId(quoteRequisition.getOfferId())</span>
+<span class="fc" id="L25">                    .createdAt(LocalDateTime.now())</span>
+<span class="fc" id="L26">                    .productId(quoteRequisition.getProductId())</span>
+<span class="fc" id="L27">                    .build();</span>
+<span class="nc" id="L28">        }catch (Exception e){</span>
+<span class="nc" id="L29">            throw new CatalogServiceRequestException(e.getMessage());</span>
+        }
+
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>
