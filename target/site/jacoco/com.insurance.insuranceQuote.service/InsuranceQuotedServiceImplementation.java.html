@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InsuranceQuotedServiceImplementation.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">insuranceQuote</a> &gt; <a href="index.source.html" class="el_package">com.insurance.insuranceQuote.service</a> &gt; <span class="el_source">InsuranceQuotedServiceImplementation.java</span></div><h1>InsuranceQuotedServiceImplementation.java</h1><pre class="source lang-java linenums">package com.insurance.insuranceQuote.service;
+
+import com.insurance.insuranceQuote.data.InsuranceQuotedRepository;
+import com.insurance.insuranceQuote.exception.InsuranceQuotedException;
+import com.insurance.insuranceQuote.model.dto.InsurancePolicyResponse;
+import com.insurance.insuranceQuote.model.entity.QuotedInsurance;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+@Service
+<span class="fc" id="L16">@Slf4j</span>
+public class InsuranceQuotedServiceImplementation implements InsuranceQuotedService {
+
+    private InsuranceQuotedRepository quotedRepository;
+
+    @Autowired
+<span class="fc" id="L22">    public InsuranceQuotedServiceImplementation(InsuranceQuotedRepository quotedRepository){</span>
+<span class="fc" id="L23">        this.quotedRepository = quotedRepository;</span>
+<span class="fc" id="L24">    }</span>
+
+    /**
+     * Persistencia da cotação de seguro validada
+     * @param quotedInsurance
+     * @throws InsuranceQuotedException
+     */
+    @Transactional
+    @Override
+    public void persistInsuranceQuoted(QuotedInsurance quotedInsurance) throws InsuranceQuotedException {
+        try {
+<span class="nc" id="L35">            quotedRepository.save(quotedInsurance);</span>
+<span class="fc" id="L36">        }catch (Exception e){</span>
+<span class="fc" id="L37">            throw new InsuranceQuotedException(&quot;An error ocurred when saving Insurance. QuotedId:&quot;+ quotedInsurance.getQuotedId());</span>
+<span class="nc" id="L38">        }</span>
+<span class="nc" id="L39">    }</span>
+
+    /**
+     * Reverte a persistencia da cotação em caso de falha
+     * @param quotedId
+     */
+    @Override
+    @Transactional
+    public void revertInsuranceQuoted(Long quotedId) {
+<span class="fc" id="L48">        Optional&lt;QuotedInsurance&gt; insurance = quotedRepository.findById(quotedId);</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">        if(insurance.isPresent()){</span>
+<span class="fc" id="L50">            quotedRepository.delete(insurance.get());</span>
+        }
+<span class="fc" id="L52">    }</span>
+
+    /**
+     * Atualiza a cotação de seguro com os dados recebidos do broker
+     * @param policyResponse
+     * @throws InsuranceQuotedException
+     */
+    @Override
+    public void updateInsuranceQuoted(InsurancePolicyResponse policyResponse) throws InsuranceQuotedException{
+      try {
+<span class="fc" id="L62">          Optional&lt;QuotedInsurance&gt; insurance = quotedRepository.findById(policyResponse.getQuotedId());</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">          if (insurance.isEmpty()) {</span>
+<span class="fc" id="L64">              throw new InsuranceQuotedException(&quot;Quoted Insurance not found. QuotedId: &quot; + policyResponse.getQuotedId());</span>
+          }
+
+<span class="fc" id="L67">          insurance.get().setInsurancePolicyId(policyResponse.getInsurancePolicyId());</span>
+<span class="fc" id="L68">          insurance.get().setUpdateAt(LocalDateTime.now());</span>
+
+<span class="fc" id="L70">          quotedRepository.save(insurance.get());</span>
+
+<span class="fc" id="L72">          log.info(&quot;Updated quote ID:{} with received policyId: {} &quot;,insurance.get().getQuotedId(), insurance.get().getInsurancePolicyId());</span>
+<span class="fc" id="L73">      }catch (Exception e){</span>
+<span class="fc" id="L74">          throw new InsuranceQuotedException(&quot;Error updating insurance. &quot;+e.getMessage());</span>
+<span class="fc" id="L75">      }</span>
+
+<span class="fc" id="L77">    }</span>
+
+    /**
+     * Recupera uma cotação armazenada a partir do ID
+     * @param quotedId
+     * @return
+     * @throws InsuranceQuotedException
+     */
+    @Override
+    public QuotedInsurance getQuotedInsurance(String quotedId) throws InsuranceQuotedException {
+
+<span class="fc" id="L88">        Optional&lt;QuotedInsurance&gt; quoted = quotedRepository.findById(Long.parseLong(quotedId));</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        if(quoted.isEmpty()){</span>
+<span class="fc" id="L90">            throw new InsuranceQuotedException(&quot;Quoted Insurance not found&quot;);</span>
+        }
+
+<span class="fc" id="L93">        return quoted.get();</span>
+    }
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CatalogServiceImplementation.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">insuranceQuote</a> &gt; <a href="index.source.html" class="el_package">com.insurance.insuranceQuote.service</a> &gt; <span class="el_source">CatalogServiceImplementation.java</span></div><h1>CatalogServiceImplementation.java</h1><pre class="source lang-java linenums">package com.insurance.insuranceQuote.service;
+
+import com.insurance.insuranceQuote.exception.CatalogServiceRequestException;
+import com.insurance.insuranceQuote.model.dto.InsuranceOfferResponse;
+import com.insurance.insuranceQuote.model.dto.InsuranceProductResponse;
+import com.insurance.insuranceQuote.model.dto.QuoteRequisition;
+import com.insurance.insuranceQuote.model.entity.QuotedInsurance;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static com.insurance.insuranceQuote.util.InsuranceMapper.insuranceRequisitionToQuoted;
+
+@Service
+<span class="fc" id="L19">@Slf4j</span>
+<span class="fc" id="L20">public class CatalogServiceImplementation implements CatalogService {</span>
+
+    @Autowired
+    private RestClientServiceImplementation restClientService;
+
+    @Override
+    public QuotedInsurance validateQuoteRequisition(QuoteRequisition quoteRequisition) throws CatalogServiceRequestException{
+
+<span class="fc" id="L28">            InsuranceProductResponse insuranceProduct = requestProductToCatalog(quoteRequisition.getProductId());</span>
+<span class="fc" id="L29">            InsuranceOfferResponse insuranceOffer = requestOfferToCatalog(quoteRequisition.getOfferId());</span>
+
+<span class="fc" id="L31">            validateProductandOffer(insuranceOffer, insuranceProduct, quoteRequisition);</span>
+<span class="fc" id="L32">            return insuranceRequisitionToQuoted(quoteRequisition);</span>
+    }
+
+    /**
+     * Executa validações de regras de negocio da solicitação de cotação de seguro
+     * @param insuranceOffer
+     * @param insuranceProduct
+     * @param quoteRequisition
+     * @throws CatalogServiceRequestException
+     */
+    private static void validateProductandOffer(InsuranceOfferResponse insuranceOffer, InsuranceProductResponse insuranceProduct, QuoteRequisition quoteRequisition) throws CatalogServiceRequestException {
+
+<span class="pc bpc" id="L44" title="1 of 4 branches missed.">            if (insuranceOffer == null || insuranceProduct == null) {</span>
+<span class="fc" id="L45">                throw new CatalogServiceRequestException(&quot;Invalid product or offer.&quot;);</span>
+            }
+
+<span class="pc bpc" id="L48" title="1 of 4 branches missed.">            if (insuranceOffer.isActive() == false || insuranceOffer.isActive() == false) {</span>
+<span class="fc" id="L49">                throw new CatalogServiceRequestException(&quot;Product or offer is not active.&quot;);</span>
+            }
+
+<span class="fc bfc" id="L52" title="All 2 branches covered.">            if(isCoveragesInvalid(insuranceOffer.getCoverages(), quoteRequisition.getCoverageAmounts())){</span>
+<span class="fc" id="L53">                throw new CatalogServiceRequestException(&quot;Invalid Coverages values in requisition.&quot;);</span>
+            }
+
+<span class="fc bfc" id="L56" title="All 2 branches covered.">            if(insuranceOffer.getAssistances().containsAll(quoteRequisition.getAssistances()) == false){</span>
+<span class="fc" id="L57">                throw new CatalogServiceRequestException(&quot;Invalid Assistance in quote requisition.&quot;);</span>
+            }
+
+<span class="fc bfc" id="L60" title="All 2 branches covered.">            if (!isTotalMonthlyPremiumAmountInRange(quoteRequisition.getTotalMonthlyPremiumAmount(), insuranceOffer)) {</span>
+<span class="fc" id="L61">                throw new CatalogServiceRequestException(&quot;Invalid Monthly Premium Amount.&quot;);</span>
+            }
+
+<span class="fc" id="L64">            if (quoteRequisition.getCoverageAmounts().values().stream().collect(Collectors.summarizingDouble(Double::doubleValue)).getSum() !=</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">            quoteRequisition.getTotalCoverageAmount()){</span>
+<span class="fc" id="L66">                throw new CatalogServiceRequestException(&quot;Invalid Total Coverage Amount.&quot;);</span>
+            }
+
+<span class="fc" id="L69">    }</span>
+
+    /**
+     * Retorna verdadeiro se houver inconsistencia com uma das coberturas da cotacao
+     * @param offer
+     * @param requisition
+     * @return
+     */
+    private static boolean isCoveragesInvalid(Map&lt;java.lang.String, java.lang.Double&gt; offer,
+                                              Map&lt;java.lang.String, java.lang.Double&gt; requisition){
+            //invalido
+<span class="fc" id="L80">            if(requisition.entrySet().stream()</span>
+<span class="fc bfc" id="L81" title="All 4 branches covered.">                    .anyMatch(c-&gt; (offer.get(c.getKey()) &lt; c.getValue())))</span>
+<span class="fc" id="L82">                return true;</span>
+
+<span class="fc" id="L84">            return false;</span>
+    }
+
+    /**
+     * Retorna verdadeiro se o valor do premio mensal estiver dentro do intervalo valido
+     * @param totalMonthlyPremiumAmount
+     * @param insuranceOffer
+     * @return
+     */
+    private static boolean isTotalMonthlyPremiumAmountInRange(Double totalMonthlyPremiumAmount, InsuranceOfferResponse insuranceOffer) {
+
+        //valido
+<span class="pc bpc" id="L96" title="1 of 4 branches missed.">        if(insuranceOffer.getMonthlyPremiumAmount().get(&quot;max_amount&quot;) &gt; totalMonthlyPremiumAmount &amp;&amp; (insuranceOffer.getMonthlyPremiumAmount().get(&quot;min_amount&quot;) &lt; totalMonthlyPremiumAmount))</span>
+<span class="fc" id="L97">            return true;</span>
+
+<span class="fc" id="L99">        return false;</span>
+    }
+
+    /**
+     * Solicita dados de oferta ao servico responsavel pela comunicação REST com o Catalogo
+     * @param offerId
+     * @return
+     * @throws CatalogServiceRequestException
+     */
+    private InsuranceOfferResponse requestOfferToCatalog(String offerId) throws CatalogServiceRequestException {
+<span class="fc" id="L109">        Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L110">        params.put(&quot;offer_id&quot;, offerId);</span>
+
+<span class="fc" id="L112">       return restClientService.requestOfferToCatalogRestClient(params);</span>
+    }
+
+    /**
+     * Solicita dados de produto ao servico responsavel pela comunicação REST com o Catalogo
+     * @param productId
+     * @return
+     * @throws CatalogServiceRequestException
+     */
+    private InsuranceProductResponse requestProductToCatalog(String productId) throws CatalogServiceRequestException {
+<span class="fc" id="L122">        Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L123">        params.put(&quot;product_id&quot;, productId);</span>
+
+<span class="fc" id="L125">        return restClientService.requestProductToCatalog(params);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

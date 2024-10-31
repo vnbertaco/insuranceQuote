@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>KafkaProducerService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">insuranceQuote</a> &gt; <a href="index.source.html" class="el_package">com.insurance.insuranceQuote.service</a> &gt; <span class="el_source">KafkaProducerService.java</span></div><h1>KafkaProducerService.java</h1><pre class="source lang-java linenums">package com.insurance.insuranceQuote.service;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
+import org.springframework.stereotype.Component;
+
+import java.util.concurrent.CompletableFuture;
+
+@Component
+<span class="fc" id="L13">@Slf4j</span>
+public class KafkaProducerService {
+
+    @Value(value = &quot;${producer.topic.name}&quot;)
+    private String topicName;
+
+    private KafkaTemplate&lt;String, String&gt; kafkaTemplate;
+
+
+    @Autowired
+<span class="fc" id="L23">    public KafkaProducerService(KafkaTemplate kafkaTemplate){</span>
+<span class="fc" id="L24">        this.kafkaTemplate = kafkaTemplate;</span>
+<span class="fc" id="L25">    }</span>
+
+    /**
+     * Responsavel pela produção de uma mensagem no tópico kafka
+     * @param message
+     */
+    public void sendMessage(String message) {
+<span class="fc" id="L32">        CompletableFuture&lt;SendResult&lt;String, String&gt;&gt; future = kafkaTemplate.send(topicName, message);</span>
+<span class="fc" id="L33">        future.whenComplete((result, ex) -&gt; {</span>
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">            if (ex == null) {</span>
+<span class="fc" id="L35">                log.info(&quot;Sent message=[{}] with offset=[{}]&quot;, message, result.getRecordMetadata().offset());</span>
+            } else {
+<span class="nc" id="L37">                log.error(&quot;Unable to send message=[{}] due to : {}&quot;, message, ex.getMessage());</span>
+<span class="nc" id="L38">                throw new RuntimeException(&quot;Error sending kafka message&quot;);</span>
+            }
+<span class="fc" id="L40">        });</span>
+<span class="fc" id="L41">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>
